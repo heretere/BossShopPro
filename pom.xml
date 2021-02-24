@@ -2,12 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.black_ixx</groupId>
-	<artifactId>BossShopPro</artifactId>
+	<artifactId>BossShopPro-TCFORK</artifactId>
 	<version>2.0.9</version>
-	<name>BossShopPro</name>
+	<name>BossShopPro-TCFORK</name>
 	<description>Create virtual chest shops</description>
 	<build>
-		<finalName>BossShopPro</finalName>
 		<resources>
 			<resource>
 				<targetPath>.</targetPath>
@@ -22,7 +21,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
+				<version>2.3.2</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>

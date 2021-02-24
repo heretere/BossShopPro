@@ -1,10 +1,10 @@
 package org.black_ixx.bossshop.managers.item;
 
-
 import org.black_ixx.bossshop.core.BSBuy;
 import org.black_ixx.bossshop.managers.ClassManager;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -41,7 +41,6 @@ public class ItemStackChecker {
         tools_complete.add(Material.FISHING_ROD);
     }
 
-
     public boolean inventoryContainsItem(Player p, ItemStack i, BSBuy buy) {
         if (getAmountOfSameItems(p, i, buy) >= i.getAmount()) {
             return true;
@@ -74,7 +73,51 @@ public class ItemStackChecker {
 
         a -= shop_item.getAmount();
         if (a > 0) {
-            ClassManager.manager.getBugFinder().warn("Player " + p.getName() + " lost " + a + " items of type " + shop_item.getType().name() + ". How would that happen?");
+            ClassManager.manager.getBugFinder()
+                    .warn("Player "
+                            + p.getName()
+                            + " lost "
+                            + a
+                            + " items of type "
+                            + shop_item.getType().name()
+                            + ". How would that happen?");
+        }
+        return;
+    }
+
+    public void takeItem(ItemStack shop_item, Inventory i, Player p, BSBuy buy) {
+        int a = 0;
+        int slot = -1;
+
+        for (ItemStack player_item : i) {
+            slot++;
+            if (player_item != null && player_item.getType() != Material.AIR) {
+                if (canSell(p, player_item, shop_item, slot, buy)) {
+
+                    player_item = player_item.clone(); //New
+                    player_item.setAmount(Math.min(player_item.getAmount(), shop_item.getAmount() - a)); //New
+
+                    a += player_item.getAmount();
+                    //remove(p, player_item); //Old
+                    i.removeItem(player_item); //New
+
+                    if (a >= shop_item.getAmount()) { //Reached amount. Can stop!
+                        break;
+                    }
+                }
+            }
+        }
+
+        a -= shop_item.getAmount();
+        if (a > 0) {
+            ClassManager.manager.getBugFinder()
+                    .warn("Player "
+                            + p.getName()
+                            + " lost "
+                            + a
+                            + " items of type "
+                            + shop_item.getType().name()
+                            + ". How would that happen?");
         }
         return;
     }
@@ -84,6 +127,21 @@ public class ItemStackChecker {
         int slot = -1;
 
         for (ItemStack player_item : p.getInventory().getContents()) {
+            slot++;
+            if (player_item != null) {
+                if (canSell(p, player_item, shop_item, slot, buy)) {
+                    a += player_item.getAmount();
+                }
+            }
+        }
+        return a;
+    }
+
+    public int getAmountOfSameItemsInventory(Inventory inventory, Player p, ItemStack shop_item, BSBuy buy) {
+        int a = 0;
+        int slot = -1;
+
+        for (ItemStack player_item : inventory) {
             slot++;
             if (player_item != null) {
                 if (canSell(p, player_item, shop_item, slot, buy)) {
@@ -170,37 +228,51 @@ public class ItemStackChecker {
         return amounts.isEmpty();
     }
 
-
     private boolean canSell(Player p, ItemStack player_item, ItemStack shop_item, int slot, BSBuy buy) {
         if (slot < INVENTORY_SLOT_START || slot > INVENTORY_SLOT_END) { //Has to be inside normal inventory
             return false;
         }
 
-        ItemDataPart exception_durability = isTool(player_item) && ClassManager.manager.getSettings().getAllowSellingDamagedItems() ? ItemDataPart.DURABILITY : null;
-        ItemDataPart[] exceptions = new ItemDataPart[]{exception_durability};
+        ItemDataPart exception_durability =
+                isTool(player_item) && ClassManager.manager.getSettings().getAllowSellingDamagedItems()
+                        ? ItemDataPart.DURABILITY
+                        : null;
+        ItemDataPart[] exceptions = new ItemDataPart[] { exception_durability };
 
         return ItemDataPart.isSimilar(shop_item, player_item, exceptions, buy, false, p);
     }
-
 
     public boolean isEqualShopItemAdvanced(ItemStack a, ItemStack b, boolean compare_text, Player p) {
         return isEqualShopItemAdvanced(a, b, compare_text, true, true, p);
     }
 
-    public boolean isEqualShopItemAdvanced(ItemStack a, ItemStack b, boolean compare_text, boolean compare_amount, boolean compare_itemmeta_existence, Player p) {
+    public boolean isEqualShopItemAdvanced(
+            ItemStack a,
+            ItemStack b,
+            boolean compare_text,
+            boolean compare_amount,
+            boolean compare_itemmeta_existence,
+            Player p
+    ) {
         if (a != null && b != null) {
             if (compare_itemmeta_existence && a.hasItemMeta() != b.hasItemMeta()) {
                 return false;
             }
 
             ItemDataPart[] exceptions;
-            ItemDataPart exception_durability = isTool(a) && ClassManager.manager.getSettings().getAllowSellingDamagedItems() ? ItemDataPart.DURABILITY : null;
+            ItemDataPart exception_durability =
+                    isTool(a) && ClassManager.manager.getSettings().getAllowSellingDamagedItems()
+                            ? ItemDataPart.DURABILITY
+                            : null;
             if (!compare_text) {
-                exceptions = new ItemDataPart[]{exception_durability, ItemDataPart.NAME, ItemDataPart.LORE, ItemDataPart.PLAYERHEAD};
+                exceptions = new ItemDataPart[] {
+                        exception_durability,
+                        ItemDataPart.NAME,
+                        ItemDataPart.LORE,
+                        ItemDataPart.PLAYERHEAD };
             } else {
-                exceptions = new ItemDataPart[]{exception_durability};
+                exceptions = new ItemDataPart[] { exception_durability };
             }
-
 
             return ItemDataPart.isSimilar(a, b, exceptions, null, compare_amount, p);
         }
